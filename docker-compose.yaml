@@ -1,0 +1,129 @@
+version: '3'
+
+services:
+#  servicos
+  leitor_ftp:
+    build: leitor-ftp
+    container_name: leitor_ftp
+    restart: always
+    networks:
+      - postgresql
+      - ftp
+      - broker-kafka
+      - s3ninja
+    depends_on:
+      - ftpd_server
+      - s3ninja
+      - postgresql
+      - kafka
+
+  # dependencias necessarias
+  ftpd_server:
+    image: stilliard/pure-ftpd
+    container_name: ftp
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009"
+    volumes:
+      - ".docker/ftp/data:/home/username"
+      - ".docker/ftp/passwd:/etc/pure-ftpd/passwd"
+    environment:
+      PUBLICHOST: "localhost"
+      FTP_USER_NAME: username
+      FTP_USER_PASS: mypass
+      FTP_USER_HOME: /home/username
+    restart: always
+    networks:
+      - ftp
+
+  s3ninja:
+    build: .docker/s3ninja
+    container_name: s3ninja
+    ports:
+      - "9000:9000"
+    volumes:
+      - ".docker/s3ninja/buckets:/home/sirius/data"
+    restart: always
+    networks:
+      - s3ninja
+  postgresql:
+    image: postgres
+    container_name: postgre
+    volumes:
+      - .docker/postgresql/data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DATABASE: gnus
+    networks:
+      - postgresql
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "3307:8080"
+    networks:
+      - postgresql
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - broker-kafka
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - broker-kafka
+    depends_on:
+      - zookeeper
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    networks:
+      - broker-kafka
+    depends_on:
+      - kafka
+    ports:
+      - 19000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+
+#  consul-server:
+#    image: consul:latest
+#    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0 -data-dir /consul/data
+#    volumes:
+#      - ./.docker/consul/data/:/consul/data/
+#    ports:
+#      - "8500:8500"
+#      - "8600:8600/udp"
+#    networks:
+#      - consul
+
+networks:
+  s3ninja :
+    driver: bridge
+  ftp:
+    driver: bridge
+  postgresql:
+    driver: bridge
+  broker-kafka:
+    driver: bridge
+#  consul:
+#    driver: bridge

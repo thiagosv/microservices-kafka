@@ -1,0 +1,43 @@
+ftp:
+    server: ftpd_server
+    port: 21
+    user: username
+    pass: mypass
+s3:
+    access:
+        key: AKIAIOSFODNN7EXAMPLE
+    secret:
+        key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    host: http://s3ninja:9000/s3
+    bucket: bucket1
+spring:
+    datasource:
+        url: jdbc:postgresql://postgresql/gnus
+        username: root
+        password: root
+        driver-class-name: org.postgresql.Driver
+        testWhileIdle: true
+        validationQuery: SELECT 1
+        max-wait: 10000
+        max-active: 50
+        test-on-borrow: true
+    jpa:
+        hibernate:
+            show-sql: true
+            ddl-auto: update
+kafka:
+    bootstrap-servers: kafka:9092
+    consumergroup: leitorftp-group
+    topictopics1: topic-transformar-arquivo-s1
+    topictopics2: topic-transformar-arquivo-s2
+    producer:
+        max:
+            request:
+                size: 231072000
+        batch-size: 60000000
+        buffer-memory: 60000000
+    client-id: leitor-ftp-producer
+    consumer:
+        group-id: leitorftp-group
+        auto-offset-reset: earliest
+        enable-auto-commit: false
