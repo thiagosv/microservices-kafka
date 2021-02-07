@@ -47,17 +47,16 @@ services:
     networks:
       - s3ninja
   postgresql:
-    image: postgres
+    build: .docker/postgresql
     container_name: postgre
     volumes:
-      - .docker/postgresql/data:/var/lib/postgresql/data
+      - .docker/postgresql/data:/var/lib/postgresql/
     restart: always
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
-      POSTGRES_DATABASE: gnus
     networks:
       - postgresql
   adminer:
