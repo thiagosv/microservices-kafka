@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  sonar:
+    image: sonarqube
+    ports:
+      - 29000:9000
+      - 29092:9092
+    networks:
+      - sonar
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: jenkins
+    volumes:
+      - .docker/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      JENKINS_HOST_HOME: "/data/jenkins"
+    ports:
+      - 28080:8080
+      - 25000:5000
+      - 50000:50000
+    networks:
+      - jenkins
+networks:
+  sonar:
+    driver: bridge
+  jenkins:
+    driver: bridge
